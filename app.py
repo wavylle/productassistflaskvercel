@@ -17,12 +17,18 @@ import pinecone
 # nltk.download('punkt')
 # from nltk.tokenize import word_tokenize
 from collections import namedtuple
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Define the named tuple structure
 Document = namedtuple('Document', ['page_content', 'metadata'])
 
 def read_text_file(url):
     response = requests.get(url)
+    print(response.text)
     if response.status_code == 200:
         # Extract the content as a single string
         content = response.text.strip()
@@ -62,16 +68,20 @@ def paconv():
     # Access the JSON payload
     data = request.get_json()
 
+    print("API KEY: ", os.environ.get("OPENAI_API_KEY"))
+
     # Retrieve values
     question = data.get("question")
     file_url = data.get("file_url")
+
+    print("FILE URL: ", file_url)
 
     document = read_text_file(file_url)
 
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     texts = text_splitter.split_documents(document)
 
-    embeddings = OpenAIEmbeddings(openai_api_key="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")
+    embeddings = OpenAIEmbeddings(openai_api_key=os.environ.get("OPENAI_API_KEY"))
 
     docsearch = Pinecone.from_documents(
         texts, embeddings, index_name="pythonllm-embeddings2"
@@ -81,11 +91,13 @@ def paconv():
         llm=OpenAI(), chain_type="stuff", vectorstore=docsearch, return_source_documents=True
     )
 
+    query = question
     result = qa({"query": query})
 
     json_response = {"question": question, "file_url": file_url, "message": "POST request received"}
 
-    return jsonify(json_response)
+    return jsonify(result)
 
 
-
+if __name__ == "__main__":
+    app.run(debug=True)
