@@ -94,7 +94,10 @@ def paconv():
     query = question
     result = qa({"query": query})
 
-    json_response = {"question": question, "file_url": file_url, "message": "POST request received"}
+    if "result" in result:
+        json_response = {"question": question, "file_url": file_url, "message": result["result"]}
+    else:
+        json_response = {"question": question, "file_url": file_url, "message": "There's an error from our end. We are getting on it."}
 
     print("RESULT: ", result)
     print("RESULT TYPE: ", type(result))
