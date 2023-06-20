@@ -33,6 +33,8 @@ def read_text_file(url):
         # Extract the content as a single string
         content = response.text.strip()
 
+        content = content.replace('\r', '')
+
         # Create the Document namedtuple and populate the array
         documents = [Document(page_content=content, metadata={'source': 'data.txt'})]
         return documents
