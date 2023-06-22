@@ -42,10 +42,6 @@ def read_text_file(url):
         print("Error: Failed to fetch the text file.")
         return []
 
-pinecone.init(
-    api_key="31b08bd6-3937-487d-803e-4eee036a8aaa",
-    environment="us-west4-gcp-free",
-)
 
 app = Flask(__name__)
 
@@ -75,6 +71,13 @@ def paconv():
     # Retrieve values
     question = data.get("question")
     file_url = data.get("file_url")
+    pinecone_api_key = data.get("pinecone_api_key")
+    pinecone_environment = data.get("pinecone_environment")
+    
+    pinecone.init(
+        api_key=pinecone_api_key,
+        environment=pinecone_environment,
+    )
 
     print("FILE URL: ", file_url)
 
