@@ -58,7 +58,7 @@ def testPost():
     file_url = data.get("file_url")
 
     json_response = {"question": question, "file_url": file_url, "message": "POST request received"}
-
+    time.sleep(35)
     return jsonify(json_response)
 
 @app.route('/get-data', methods=['POST'])
