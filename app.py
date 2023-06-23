@@ -13,6 +13,9 @@ from langchain.vectorstores import Pinecone
 from langchain import VectorDBQA, OpenAI
 from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain
 import pinecone
+from langchain.chains.summarize import load_summarize_chain
+from langchain.chains.question_answering import load_qa_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 # import nltk
 # nltk.download('punkt')
 # from nltk.tokenize import word_tokenize
@@ -109,6 +112,49 @@ def paconv():
 
 
     return jsonify(json_response)
+
+
+@app.route('/answer', methods=['POST'])
+def getanswer():
+
+    data = request.get_json()
+
+    print("API KEY: ", os.environ.get("OPENAI_API_KEY"))
+
+    # Retrieve values
+    question = data.get("question")
+    file_url = data.get("file_url")
+    pinecone_api_key = data.get("pinecone_api_key")
+    pinecone_environment = data.get("pinecone_environment")
+    
+    try:
+
+        llm = OpenAI(openai_api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=400,
+        chunk_overlap=0
+        )
+
+        document = read_text_file(file_url)
+
+        docs = text_splitter.split_documents(document)
+        chain = load_qa_chain(llm, chain_type="map_rerank", verbose=True, return_intermediate_steps = True)
+
+        query = question
+        
+        result = chain({"input_documents": docs, "question": query}, return_only_outputs=True)
+
+        if "output_text" in result:
+            json_response = {"question": question, "file_url": file_url, "message": result["output_text"]}
+        else:
+            json_response = {"question": question, "file_url": file_url, "message": "There's an error from our end. We are getting on it."}
+    except:
+        json_response = {"question": question, "file_url": file_url, "message": "There's an error from our end. We are getting on it."}
+    
+    return jsonify(json_response)
+
+
 
 
 if __name__ == "__main__":
